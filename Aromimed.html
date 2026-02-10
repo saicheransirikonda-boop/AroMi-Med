@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AroMi Med – Health Assessment</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-50">
+<div id="app"></div>
+
+<script>
+/* ---------------- GLOBAL STATE ---------------- */
+let user = {};
+let currentModule = "";
+let qIndex = 0;
+let answers = [];
+const app = document.getElementById("app");
+
+/* ---------------- NAVIGATION ---------------- */
+function navigate(page) {
+  if (page === "login") renderLogin();
+  if (page === "details") renderDetails();
+  if (page === "dashboard") renderDashboard();
+  if (page === "questions") renderQuestion();
+  if (page === "report") renderReport();
+}
+
+/* ---------------- LOGIN ---------------- */
+function renderLogin() {
+  app.innerHTML = `
+  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-sky-100">
+    <div class="bg-white p-8 rounded-2xl shadow-xl w-96">
+      <h1 class="text-2xl font-bold text-center mb-2">AroMi Med</h1>
+      <p class="text-center text-gray-500 mb-4">Login using Gmail only</p>
+
+      <input id="email" type="email"
+        class="border p-2 w-full rounded mb-2"
+        placeholder="example@gmail.com"/>
+
+      <p id="error" class="text-red-500 text-sm hidden">
+        Only @gmail.com emails are allowed
+      </p>
+
+      <button onclick="checkLogin()"
+        class="mt-4 w-full bg-emerald-600 text-white py-2 rounded">
+        Continue
+      </button>
+    </div>
+  </div>`;
+}
+
+function checkLogin() {
+  const email = document.getElementById("email").value.trim();
+  if (!email.endsWith("@gmail.com")) {
+    document.getElementById("error").classList.remove("hidden");
+    return;
+  }
+  user.email = email;
+  navigate("details");
+}
+
+/* ---------------- DETAILS ---------------- */
+function renderDetails() {
+  app.innerHTML = `
+  <div class="p-8 max-w-3xl mx-auto">
+    <h2 class="text-2xl font-bold mb-6">Basic Health Details</h2>
+
+    <input class="border p-2 rounded w-full mb-3"
+      placeholder="Full Name"
+      onchange="user.name=this.value"/>
+
+    <select class="border p-2 rounded w-full mb-3"
+      onchange="user.age=this.value">
+      <option value="">Select Age</option>
+      ${Array.from({length:60},(_,i)=>`<option>${i+15}</option>`).join("")}
+    </select>
+
+    <select class="border p-2 rounded w-full mb-3"
+      onchange="user.height=this.value">
+      <option value="">Height (cm)</option>
+      ${Array.from({length:80},(_,i)=>`<option>${140+i}</option>`).join("")}
+    </select>
+
+    <select class="border p-2 rounded w-full mb-3"
+      onchange="user.weight=this.value">
+      <option value="">Weight (kg)</option>
+      ${Array.from({length:100},(_,i)=>`<option>${30+i}</option>`).join("")}
+    </select>
+
+    <select class="border p-2 rounded w-full mb-6"
+      onchange="user.blood=this.value">
+      <option value="">Blood Group</option>
+      ${["A+","A-","B+","B-","O+","O-","AB+","AB-"].map(b=>`<option>${b}</option>`).join("")}
+    </select>
+
+    <button onclick="navigate('dashboard')"
+      class="bg-sky-600 text-white px-6 py-2 rounded">
+      Continue
+    </button>
+  </div>`;
+}
+
+/* ---------------- QUESTION BANK ---------------- */
+const questionBank = {
+  "Body Health": [
+    "Do you feel tired even after full sleep?",
+    "Do you have frequent body pain?",
+    "Do you exercise regularly?",
+    "Do you sit for long hours daily?",
+    "Do you fall sick frequently?"
+  ],
+  "Skin Care – Face": [
+    "Do you get acne or pimples?",
+    "Is your skin oily?",
+    "Do you use sunscreen daily?",
+    "Do you drink enough water?",
+    "Do you cleanse face twice daily?"
+  ],
+  "Hair Care": [
+    "Do you experience hair fall?",
+    "Do you have dandruff?",
+    "Do you oil your hair regularly?",
+    "Do you use heat styling tools?",
+    "Do you face stress-related hair fall?"
+  ],
+  "Gut Health": [
+    "Do you feel bloating?",
+    "Do you have acidity?",
+    "Do you skip meals?",
+    "Do you eat junk food often?",
+    "Do you drink less water?"
+  ],
+  "Heart Health": [
+    "Do you feel chest pain?",
+    "Do you feel breathless?",
+    "Do you exercise regularly?",
+    "Do you consume oily food?",
+    "Do you feel stressed often?"
+  ]
+};
+
+/* ---------------- DASHBOARD ---------------- */
+function renderDashboard() {
+  app.innerHTML = `
+  <div class="p-8">
+    <h2 class="text-2xl font-bold mb-6">Health Assessment Modules</h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      ${Object.keys(questionBank).map(module => `
+        <div onclick="startModule('${module}')"
+          class="cursor-pointer bg-white p-6 rounded-xl shadow hover:shadow-lg transition">
+          <h3 class="font-semibold text-center">${module}</h3>
+        </div>
+      `).join("")}
+    </div>
+  </div>`;
+}
+
+/* ---------------- QUESTIONS ---------------- */
+function startModule(module) {
+  currentModule = module;
+  qIndex = 0;
+  answers = [];
+  navigate("questions");
+}
+
+function renderQuestion() {
+  const q = questionBank[currentModule][qIndex];
+
+  app.innerHTML = `
+  <div class="p-8 max-w-xl mx-auto">
+    <h2 class="text-xl font-bold mb-2">${currentModule}</h2>
+    <p class="mb-2">Question ${qIndex + 1} of ${questionBank[currentModule].length}</p>
+
+    <p class="mb-4 font-medium">${q}</p>
+
+    <select id="answer" class="border p-2 rounded w-full mb-4">
+      <option>Never</option>
+      <option>Sometimes</option>
+      <option>Often</option>
+      <option>Always</option>
+    </select>
+
+    <button onclick="nextQuestion()"
+      class="bg-emerald-600 text-white px-6 py-2 rounded">
+      Next
+    </button>
+  </div>`;
+}
+
+function nextQuestion() {
+  answers.push(document.getElementById("answer").value);
+  qIndex++;
+
+  if (qIndex < questionBank[currentModule].length) {
+    renderQuestion();
+  } else {
+    navigate("report");
+  }
+}
+
+/* ---------------- REPORT ---------------- */
+function renderReport() {
+  app.innerHTML = `
+  <div class="p-8 min-h-screen bg-gradient-to-br from-sky-50 to-emerald-50">
+    <h2 class="text-2xl font-bold mb-4">${currentModule} – Healt
